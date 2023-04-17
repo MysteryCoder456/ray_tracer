@@ -11,14 +11,27 @@ fn main() {
         .run();
 }
 
-struct Model {}
-
-fn model(_app: &App) -> Model {
-    Model {}
+struct Model {
+    angle: f32,
 }
 
-fn update(_app: &App, _model: &mut Model, _update: Update) {}
+fn model(_app: &App) -> Model {
+    Model { angle: 0. }
+}
 
-fn view(_app: &App, _model: &Model, frame: Frame) {
+fn update(_app: &App, model: &mut Model, update: Update) {
+    model.angle += update.since_last.as_secs_f32();
+}
+
+fn view(app: &App, model: &Model, frame: Frame) {
     frame.clear(SKYBLUE);
+
+    let draw = app.draw();
+    draw.tri()
+        .rgb(1., 1., 1.)
+        .w_h(173., 200.)
+        .z_radians(model.angle)
+        .finish();
+
+    draw.to_frame(app, &frame).unwrap();
 }
