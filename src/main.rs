@@ -35,9 +35,9 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 
     for y in 0..WIN_HEIGHT {
         for x in 0..WIN_WIDTH {
-            let r = rng.gen::<u8>();
-            let g = rng.gen::<u8>();
-            let b = rng.gen::<u8>();
+            let r = (x as f32 / WIN_WIDTH as f32 * 255.) as u8;
+            let g = (y as f32 / WIN_HEIGHT as f32 * 255.) as u8;
+            let b = 130;
 
             model
                 .image
