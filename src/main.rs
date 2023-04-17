@@ -1,37 +1,55 @@
-use nannou::prelude::*;
-use std::time::Duration;
+use nannou::{
+    image::{DynamicImage, GenericImage, Rgba},
+    prelude::*,
+    wgpu::Texture,
+};
+use rand::Rng;
+
+const WIN_WIDTH: usize = 1280;
+const WIN_HEIGHT: usize = 720;
 
 fn main() {
     nannou::app(model)
         .update(update)
         .simple_window(view)
-        .loop_mode(LoopMode::Rate {
-            update_interval: Duration::from_secs_f32(1. / 60.),
-        })
+        .size(WIN_WIDTH as u32, WIN_HEIGHT as u32)
         .run();
 }
 
 struct Model {
-    angle: f32,
+    image: DynamicImage,
+    position: Vec3,
+    radius: f32,
 }
 
 fn model(_app: &App) -> Model {
-    Model { angle: 0. }
+    Model {
+        image: DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
+        position: Vec3::new(0., 0., 50.),
+        radius: 50.,
+    }
 }
 
-fn update(_app: &App, model: &mut Model, update: Update) {
-    model.angle += update.since_last.as_secs_f32();
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    let mut rng = rand::thread_rng();
+
+    for y in 0..WIN_HEIGHT {
+        for x in 0..WIN_WIDTH {
+            let r = rng.gen::<u8>();
+            let g = rng.gen::<u8>();
+            let b = rng.gen::<u8>();
+
+            model
+                .image
+                .put_pixel(x as u32, y as u32, Rgba::<u8>([r, g, b, 255]));
+        }
+    }
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    frame.clear(SKYBLUE);
-
+    frame.clear(BLACK);
+    let texture = Texture::from_image(app, &model.image);
     let draw = app.draw();
-    draw.tri()
-        .rgb(1., 1., 1.)
-        .w_h(173., 200.)
-        .z_radians(model.angle)
-        .finish();
-
+    draw.texture(&texture).finish();
     draw.to_frame(app, &frame).unwrap();
 }

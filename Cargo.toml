@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 nannou = "0.18"
+rand = "0.8"
