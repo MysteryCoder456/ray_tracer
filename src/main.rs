@@ -3,10 +3,9 @@ use nannou::{
     prelude::*,
     wgpu::Texture,
 };
-use rand::Rng;
 
-const WIN_WIDTH: usize = 1280;
-const WIN_HEIGHT: usize = 720;
+const WIN_WIDTH: i32 = 800;
+const WIN_HEIGHT: i32 = 800;
 
 fn main() {
     nannou::app(model)
@@ -18,6 +17,7 @@ fn main() {
 
 struct Model {
     image: DynamicImage,
+    fov: f32,
     position: Vec3,
     radius: f32,
 }
@@ -25,44 +25,45 @@ struct Model {
 fn model(_app: &App) -> Model {
     Model {
         image: DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
-        position: Vec3::new(WIN_WIDTH as f32 / 2., WIN_HEIGHT as f32 / 2., 200.),
-        radius: 50.,
+        fov: 80., // degrees
+        position: Vec3::new(0., 0., 50.),
+        radius: 10.,
     }
 }
 
-fn update(_app: &App, model: &mut Model, update: Update) {
-    let mut rng = rand::thread_rng();
-    let circle = &mut model.position;
-    circle.x -= 5. * update.since_last.as_secs_f32();
+fn update(_app: &App, model: &mut Model, _update: Update) {
+    let circle = model.position;
 
-    for y in 0..WIN_HEIGHT {
-        for x in 0..WIN_WIDTH {
-            let pos = Vec3::new(x as f32, y as f32, 0.);
-            let dir = Vec3::Z;
+    let half_win_width = WIN_WIDTH / 2;
+    let half_win_height = WIN_HEIGHT / 2;
 
-            let a = dir.x * dir.x + dir.y * dir.y + dir.z * dir.z;
-            let b = 2. * pos.x * dir.x + 2. * pos.y * dir.y + 2. * pos.z * dir.z
-                - 2. * dir.x * circle.x
-                - 2. * dir.y * circle.y
-                - 2. * dir.z * circle.z;
-            let c = pos.x * pos.x + pos.y * pos.y + pos.z * pos.z
-                - 2. * pos.x * circle.x
-                - 2. * pos.y * circle.y
-                - 2. * pos.z * circle.z
-                + circle.x * circle.x
-                + circle.y * circle.y
-                + circle.z * circle.z
+    for y in -half_win_height..half_win_height {
+        for x in -half_win_width..half_win_width {
+            let pos = Vec3::ZERO;
+            let dir = Vec3::new(
+                (model.fov / 2.).tan() * x as f32 / half_win_width as f32,
+                (model.fov / 2.).tan() * y as f32 / half_win_height as f32,
+                1.,
+            )
+            .normalize();
+
+            let a = dir.dot(dir);
+            let b = 2. * pos.dot(dir) - 2. * dir.dot(circle);
+            let c = pos.dot(pos) - 2. * pos.dot(circle) + circle.dot(circle)
                 - model.radius * model.radius;
+            let d = b * b - 4. * a * c;
 
-            let det = b * b - 4. * a * c;
-
-            let color = if det >= 0. {
+            let color = if d >= 0. {
                 Rgba::<u8>([255, 255, 255, 255])
             } else {
                 Rgba::<u8>([0, 0, 0, 255])
             };
 
-            model.image.put_pixel(x as u32, y as u32, color);
+            model.image.put_pixel(
+                (x + half_win_width) as u32,
+                (y + half_win_height) as u32,
+                color,
+            );
         }
     }
 }
