@@ -3,6 +3,9 @@ use nannou::{
     prelude::*,
     wgpu::Texture,
 };
+use ray::ray_circle_collision;
+
+mod ray;
 
 const WIN_WIDTH: i32 = 800;
 const WIN_HEIGHT: i32 = 800;
@@ -18,6 +21,7 @@ fn main() {
 struct Model {
     image: DynamicImage,
     fov: f32,
+    lighting_direction: Vec3,
     position: Vec3,
     radius: f32,
 }
@@ -26,16 +30,22 @@ fn model(_app: &App) -> Model {
     Model {
         image: DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 80., // degrees
-        position: Vec3::new(0., 0., 50.),
+        lighting_direction: Vec3::new(0., -1., 0.5).normalize(),
+        position: Vec3::new(0., 0., 20.),
         radius: 10.,
     }
 }
 
-fn update(_app: &App, model: &mut Model, _update: Update) {
-    let circle = model.position;
-
+fn update(_app: &App, model: &mut Model, update: Update) {
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
+
+    model.lighting_direction = Vec3::new(
+        update.since_start.as_secs_f32().cos(),
+        update.since_start.as_secs_f32().sin(),
+        0.,
+    )
+    .normalize();
 
     for y in -half_win_height..half_win_height {
         for x in -half_win_width..half_win_width {
@@ -47,14 +57,12 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
             )
             .normalize();
 
-            let a = dir.dot(dir);
-            let b = 2. * pos.dot(dir) - 2. * dir.dot(circle);
-            let c = pos.dot(pos) - 2. * pos.dot(circle) + circle.dot(circle)
-                - model.radius * model.radius;
-            let d = b * b - 4. * a * c;
+            let hit_info = ray_circle_collision(pos, dir, model.position, model.radius);
 
-            let color = if d >= 0. {
-                Rgba::<u8>([255, 255, 255, 255])
+            let color = if let Some(hit) = hit_info {
+                let lightness = (1. - model.lighting_direction.dot(hit.normal)) / 2.;
+                let color = (255. * lightness) as u8;
+                Rgba::<u8>([color, color, color, 255])
             } else {
                 Rgba::<u8>([0, 0, 0, 255])
             };
