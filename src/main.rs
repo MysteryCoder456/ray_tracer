@@ -31,16 +31,16 @@ fn model(_app: &App) -> Model {
     Model {
         image: DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 70., // degrees
-        lighting_direction: Vec3::new(0.5, 1., 0.25).normalize(),
+        lighting_direction: Vec3::new(0., 0., 1.).normalize(),
         shapes: vec![
             Box::new(Sphere {
-                position: Vec3::new(0., 2.5, 20.),
-                radius: 5.,
+                position: Vec3::new(0., 2., 20.),
+                radius: 3.,
                 color: [1., 1., 1.].into(),
             }),
             Box::new(Sphere {
-                position: Vec3::new(-10., -2.5, 10.),
-                radius: 2.,
+                position: Vec3::new(-6., -2., 14.),
+                radius: 3.,
                 color: [1., 0.25, 1.].into(),
             }),
         ],
@@ -88,13 +88,13 @@ fn update(_app: &App, model: &mut Model, update: Update) {
                 }
 
                 if let Some(closest_hit) = closest_hit {
-                    let lightness = (model.lighting_direction.dot(-closest_hit.normal) + 1.) / 2.;
+                    let lightness = model.lighting_direction.dot(-closest_hit.normal).max(0.);
                     let color = if let Some(pc) = pixel_color {
                         let hit_color = closest_hit.color.0;
                         [
-                            hit_color[0] * pc.0[0],
-                            hit_color[1] * pc.0[1],
-                            hit_color[2] * pc.0[2],
+                            hit_color[0] * pc.0[0] * lightness,
+                            hit_color[1] * pc.0[1] * lightness,
+                            hit_color[2] * pc.0[2] * lightness,
                         ]
                     } else {
                         closest_hit.color.0.map(|c| c * lightness)
@@ -110,6 +110,8 @@ fn update(_app: &App, model: &mut Model, update: Update) {
                             rng.gen_range(-8..8) as f32 / 100.,
                             rng.gen_range(-8..8) as f32 / 100.,
                         );
+                } else {
+                    break;
                 }
             }
 
