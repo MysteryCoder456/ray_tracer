@@ -34,12 +34,12 @@ fn model(_app: &App) -> Model {
         lighting_direction: Vec3::new(0.5, 1., 0.25).normalize(),
         shapes: vec![
             Box::new(Sphere {
-                position: Vec3::new(0., 0., 20.),
+                position: Vec3::new(0., 2.5, 20.),
                 radius: 5.,
-                color: [0.25, 0.7, 1.].into(),
+                color: [1., 1., 1.].into(),
             }),
             Box::new(Sphere {
-                position: Vec3::new(-10., 0., 10.),
+                position: Vec3::new(-10., -2.5, 10.),
                 radius: 2.,
                 color: [1., 0.25, 1.].into(),
             }),
@@ -103,7 +103,13 @@ fn update(_app: &App, model: &mut Model, update: Update) {
 
                     // ray gets reflected about the normal
                     ray_origin = closest_hit.hit_point;
-                    ray_dir = ray_dir - 2. * ray_dir.dot(closest_hit.normal) * -closest_hit.normal;
+                    ray_dir = (ray_dir
+                        - 2. * ray_dir.dot(closest_hit.normal) * -closest_hit.normal)
+                        + Vec3::new(
+                            rng.gen_range(-8..8) as f32 / 100.,
+                            rng.gen_range(-8..8) as f32 / 100.,
+                            rng.gen_range(-8..8) as f32 / 100.,
+                        );
                 }
             }
 
