@@ -3,9 +3,9 @@ use nannou::{
     prelude::*,
     wgpu::Texture,
 };
-use ray::{HitInfo, Shape, Sphere};
+use shapes::{HitInfo, Shape, Sphere};
 
-mod ray;
+mod shapes;
 
 const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
