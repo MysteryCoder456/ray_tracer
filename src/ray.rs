@@ -8,6 +8,7 @@ pub struct HitInfo {
 }
 
 pub trait Shape {
+    fn translate(&mut self, v: Vec3);
     fn ray_collision(&self, ray_pos: Vec3, ray_dir: Vec3) -> Option<HitInfo>;
 }
 
@@ -18,6 +19,10 @@ pub struct Sphere {
 }
 
 impl Shape for Sphere {
+    fn translate(&mut self, v: Vec3) {
+        self.position += v;
+    }
+
     fn ray_collision(&self, ray_pos: Vec3, ray_dir: Vec3) -> Option<HitInfo> {
         let a = ray_dir.dot(ray_dir);
         let b = 2. * ray_pos.dot(ray_dir) - 2. * ray_dir.dot(self.position);
