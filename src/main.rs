@@ -1,8 +1,9 @@
 use nannou::{
-    image::{DynamicImage, GenericImage, Rgba},
+    image::{DynamicImage, GenericImage, Pixel, Rgb},
     prelude::*,
     wgpu::Texture,
 };
+use rand::Rng;
 use shapes::{HitInfo, Shape, Sphere};
 
 mod shapes;
@@ -33,14 +34,14 @@ fn model(_app: &App) -> Model {
         lighting_direction: Vec3::new(0.5, 1., 0.25).normalize(),
         shapes: vec![
             Box::new(Sphere {
-                position: Vec3::new(-2., 0., 20.),
+                position: Vec3::new(0., 0., 20.),
                 radius: 5.,
-                color: [1., 0.25, 1.].into(),
+                color: [0.25, 0.7, 1.].into(),
             }),
             Box::new(Sphere {
-                position: Vec3::new(2., 0., 10.),
+                position: Vec3::new(-10., 0., 10.),
                 radius: 2.,
-                color: [1., 1., 1.].into(),
+                color: [1., 0.25, 1.].into(),
             }),
         ],
     }
@@ -48,51 +49,72 @@ fn model(_app: &App) -> Model {
 
 fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
-    //model.image = DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
+    model.image = DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
     model.shapes[1]
         .as_mut()
-        .translate(Vec3::Z * update.since_last.as_secs_f32());
+        .translate(Vec3::X * update.since_last.as_secs_f32());
 
+    let mut rng = rand::thread_rng();
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
 
     for y in -half_win_height..half_win_height {
         for x in -half_win_width..half_win_width {
-            let pos = Vec3::ZERO;
-            let dir = Vec3::new(
+            let mut ray_origin = Vec3::ZERO;
+            let mut ray_dir = Vec3::new(
                 ASPECT_RATIO * (model.fov / 2.).tan() * x as f32 / half_win_width as f32,
                 (model.fov / 2.).tan() * y as f32 / half_win_height as f32,
                 1.,
             )
             .normalize();
+            let mut pixel_color: Option<Rgb<f32>> = None;
 
-            let mut closest_hit = HitInfo {
-                hit_point: Vec3::ZERO,
-                normal: Vec3::ZERO,
-                color: [0., 0., 0.].into(),
-                distance: f32::INFINITY,
-            };
+            for _ in 0..2 {
+                let mut closest_hit: Option<HitInfo> = None;
 
-            for s in &model.shapes {
-                let hit_info = s.ray_collision(pos, dir);
+                for s in &model.shapes {
+                    let hit_info = s.ray_collision(ray_origin, ray_dir);
 
-                if let Some(hit) = hit_info {
-                    if hit.distance < closest_hit.distance {
-                        closest_hit = hit;
+                    if let Some(hit) = hit_info {
+                        if let Some(ref ch) = closest_hit {
+                            if hit.distance < ch.distance {
+                                closest_hit = Some(hit);
+                            }
+                        } else {
+                            closest_hit = Some(hit);
+                        }
                     }
+                }
+
+                if let Some(closest_hit) = closest_hit {
+                    let lightness = (model.lighting_direction.dot(-closest_hit.normal) + 1.) / 2.;
+                    let color = if let Some(pc) = pixel_color {
+                        let hit_color = closest_hit.color.0;
+                        [
+                            hit_color[0] * pc.0[0],
+                            hit_color[1] * pc.0[1],
+                            hit_color[2] * pc.0[2],
+                        ]
+                    } else {
+                        closest_hit.color.0.map(|c| c * lightness)
+                    };
+                    pixel_color = Some(color.into());
+
+                    // ray gets reflected about the normal
+                    ray_origin = closest_hit.hit_point;
+                    ray_dir = ray_dir - 2. * ray_dir.dot(closest_hit.normal) * -closest_hit.normal;
                 }
             }
 
-            let lightness = (model.lighting_direction.dot(-closest_hit.normal) + 1.) / 2.;
-            let color = closest_hit.color.0.map(|c| (c * lightness * 255.) as u8);
-            let color = Rgba::<u8>([color[0], color[1], color[2], 255]);
-
-            model.image.put_pixel(
-                (x + half_win_width) as u32,
-                (y + half_win_height) as u32,
-                color,
-            );
+            if let Some(color) = pixel_color {
+                let mapped_color = color.to_rgba().0.map(|c| (c * 255.) as u8).into();
+                model.image.put_pixel(
+                    (x + half_win_width) as u32,
+                    (y + half_win_height) as u32,
+                    mapped_color,
+                );
+            }
         }
     }
 }
