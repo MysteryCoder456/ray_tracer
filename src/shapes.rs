@@ -1,7 +1,8 @@
-use crate::HitInfo;
+use crate::{HitInfo, Material};
 use nannou::prelude::*;
 
 pub trait Shape {
+    fn material(&self) -> Material;
     fn translate(&mut self, v: Vec3);
     fn ray_collision(&self, ray_pos: Vec3, ray_dir: Vec3) -> Option<HitInfo>;
 }
@@ -9,10 +10,14 @@ pub trait Shape {
 pub struct Sphere {
     pub position: Vec3,
     pub radius: f32,
-    pub color: Vec3,
+    pub material: Material,
 }
 
 impl Shape for Sphere {
+    fn material(&self) -> Material {
+        self.material
+    }
+
     fn translate(&mut self, v: Vec3) {
         self.position += v;
     }
@@ -40,7 +45,7 @@ impl Shape for Sphere {
         Some(HitInfo {
             hit_point,
             normal: (hit_point - self.position).normalize_or_zero(),
-            color: self.color,
+            material: self.material,
             distance: t,
         })
     }

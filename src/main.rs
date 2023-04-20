@@ -12,10 +12,17 @@ const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
 
 pub struct HitInfo {
-    pub hit_point: Vec3,
-    pub normal: Vec3,
-    pub color: Vec3,
-    pub distance: f32,
+    hit_point: Vec3,
+    normal: Vec3,
+    material: Material,
+    distance: f32,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub struct Material {
+    albedo: Vec3,
+    roughness: f32,
+    metallic: f32,
 }
 
 fn main() {
@@ -44,12 +51,20 @@ fn model(_app: &App) -> Model {
             Box::new(Sphere {
                 position: Vec3::new(0., 202., 15.),
                 radius: 200.,
-                color: [0.18, 0.38, 0.93].into(),
+                material: Material {
+                    albedo: [0.18, 0.38, 0.93].into(),
+                    roughness: 0.2,
+                    metallic: 1.,
+                },
             }),
             Box::new(Sphere {
                 position: Vec3::new(0., 0., 10.),
                 radius: 2.,
-                color: [1., 0.25, 1.].into(),
+                material: Material {
+                    albedo: [1., 0.25, 1.].into(),
+                    roughness: 0.,
+                    metallic: 1.,
+                },
             }),
         ],
     }
