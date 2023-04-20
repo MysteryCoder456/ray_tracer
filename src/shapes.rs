@@ -30,6 +30,11 @@ impl Shape for Sphere {
         }
 
         let t = (-b - d.sqrt()) / 2. * a;
+
+        if t < 0. {
+            return None;
+        }
+
         let hit_point = ray_pos + ray_dir * t;
 
         Some(HitInfo {

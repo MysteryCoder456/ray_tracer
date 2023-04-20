@@ -37,16 +37,16 @@ fn model(_app: &App) -> Model {
     Model {
         image: DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 70., // degrees
-        lighting_direction: Vec3::new(1., 1., 0.5).normalize(),
+        lighting_direction: Vec3::new(0.4, 0.4, 1.).normalize(),
         shapes: vec![
             Box::new(Sphere {
-                position: Vec3::new(-4., 0., 15.),
-                radius: 3.,
+                position: Vec3::new(0., 15., 15.),
+                radius: 15.,
                 color: [1., 1., 1.].into(),
             }),
             Box::new(Sphere {
-                position: Vec3::new(4., 0., 15.),
-                radius: 3.,
+                position: Vec3::new(0., -2., 10.),
+                radius: 2.,
                 color: [1., 0.25, 1.].into(),
             }),
         ],
@@ -57,9 +57,9 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
     //model.image = DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
-    //model.shapes[1]
-    //    .as_mut()
-    //    .translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
+    model.shapes[1]
+        .as_mut()
+        .translate(Vec3::Z * update.since_last.as_secs_f32() * 0.5);
 
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;

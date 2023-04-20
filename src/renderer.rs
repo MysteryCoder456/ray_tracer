@@ -2,7 +2,7 @@ use crate::{HitInfo, Model, WIN_HEIGHT, WIN_WIDTH};
 use nannou::prelude::*;
 
 const ASPECT_RATIO: f32 = WIN_WIDTH as f32 / WIN_HEIGHT as f32;
-const MAX_RAY_BOUNCES: usize = 2;
+const MAX_RAY_BOUNCES: usize = 3;
 
 pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
     let half_win_width = WIN_WIDTH / 2;
@@ -32,7 +32,7 @@ pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
 
             // ray gets reflected about the normal
             ray_origin = hit.hit_point + hit.normal * 0.01;
-            ray_dir = ray_dir + 2. * hit.normal.dot(ray_dir) * hit.normal;
+            ray_dir = ray_dir - 2. * hit.normal.dot(ray_dir) * hit.normal;
         } else {
             break;
         }
