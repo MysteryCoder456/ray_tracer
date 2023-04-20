@@ -30,6 +30,7 @@ pub struct Model {
     image: DynamicImage,
     fov: f32,
     lighting_direction: Vec3,
+    sky_color: Vec3,
     shapes: Vec<Box<dyn Shape>>,
 }
 
@@ -38,14 +39,15 @@ fn model(_app: &App) -> Model {
         image: DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 70., // degrees
         lighting_direction: Vec3::new(0.4, 0.4, 1.).normalize(),
+        sky_color: Vec3::new(0.46, 0.71, 0.99),
         shapes: vec![
             Box::new(Sphere {
-                position: Vec3::new(0., 15., 15.),
-                radius: 15.,
-                color: [1., 1., 1.].into(),
+                position: Vec3::new(0., 202., 15.),
+                radius: 200.,
+                color: [0.18, 0.38, 0.93].into(),
             }),
             Box::new(Sphere {
-                position: Vec3::new(0., -2., 10.),
+                position: Vec3::new(0., 0., 10.),
                 radius: 2.,
                 color: [1., 0.25, 1.].into(),
             }),
