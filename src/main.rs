@@ -1,5 +1,5 @@
 use nannou::{
-    image::{DynamicImage, GenericImage, Pixel, Rgb},
+    image::{DynamicImage, GenericImage},
     prelude::*,
     wgpu::Texture,
 };
@@ -11,6 +11,7 @@ mod shapes;
 const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
 const ASPECT_RATIO: f32 = WIN_WIDTH as f32 / WIN_HEIGHT as f32;
+const MAX_RAY_BOUNCES: usize = 2;
 
 fn main() {
     nannou::app(model)
@@ -31,7 +32,7 @@ fn model(_app: &App) -> Model {
     Model {
         image: DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 70., // degrees
-        lighting_direction: Vec3::new(0., 0., 1.).normalize(),
+        lighting_direction: Vec3::new(1., 1., 2.).normalize(),
         shapes: vec![
             Box::new(Sphere {
                 position: Vec3::new(0., 2., 20.),
@@ -39,7 +40,7 @@ fn model(_app: &App) -> Model {
                 color: [1., 1., 1.].into(),
             }),
             Box::new(Sphere {
-                position: Vec3::new(-6., -2., 14.),
+                position: Vec3::new(-6., -3.8, 15.),
                 radius: 3.,
                 color: [1., 0.25, 1.].into(),
             }),
@@ -49,11 +50,11 @@ fn model(_app: &App) -> Model {
 
 fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
-    model.image = DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
+    //model.image = DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
     model.shapes[1]
         .as_mut()
-        .translate(Vec3::X * update.since_last.as_secs_f32());
+        .translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
 
     let mut rng = rand::thread_rng();
     let half_win_width = WIN_WIDTH / 2;
@@ -68,9 +69,11 @@ fn update(_app: &App, model: &mut Model, update: Update) {
                 1.,
             )
             .normalize();
-            let mut pixel_color: Option<Rgb<f32>> = None;
 
-            for _ in 0..2 {
+            // Store colors as Vec3's for easier calculations later
+            let mut colors_hit: Vec<Vec3> = Vec::with_capacity(MAX_RAY_BOUNCES);
+
+            for _ in 0..MAX_RAY_BOUNCES {
                 let mut closest_hit: Option<HitInfo> = None;
 
                 for s in &model.shapes {
@@ -89,40 +92,38 @@ fn update(_app: &App, model: &mut Model, update: Update) {
 
                 if let Some(closest_hit) = closest_hit {
                     let lightness = model.lighting_direction.dot(-closest_hit.normal).max(0.);
-                    let color = if let Some(pc) = pixel_color {
-                        let hit_color = closest_hit.color.0;
-                        [
-                            hit_color[0] * pc.0[0] * lightness,
-                            hit_color[1] * pc.0[1] * lightness,
-                            hit_color[2] * pc.0[2] * lightness,
-                        ]
-                    } else {
-                        closest_hit.color.0.map(|c| c * lightness)
-                    };
-                    pixel_color = Some(color.into());
+                    let color = closest_hit.color.0.map(|c| c * lightness);
+                    colors_hit.push(color.into());
 
                     // ray gets reflected about the normal
                     ray_origin = closest_hit.hit_point;
                     ray_dir = (ray_dir
                         - 2. * ray_dir.dot(closest_hit.normal) * -closest_hit.normal)
                         + Vec3::new(
-                            rng.gen_range(-8..8) as f32 / 100.,
-                            rng.gen_range(-8..8) as f32 / 100.,
-                            rng.gen_range(-8..8) as f32 / 100.,
+                            rng.gen_range(-15..15) as f32 / 1000.,
+                            rng.gen_range(-15..15) as f32 / 1000.,
+                            rng.gen_range(-15..15) as f32 / 1000.,
                         );
                 } else {
                     break;
                 }
             }
 
-            if let Some(color) = pixel_color {
-                let mapped_color = color.to_rgba().0.map(|c| (c * 255.) as u8).into();
-                model.image.put_pixel(
-                    (x + half_win_width) as u32,
-                    (y + half_win_height) as u32,
-                    mapped_color,
-                );
-            }
+            let pixel_color = if colors_hit.is_empty() {
+                [0, 0, 0, 255].into()
+            } else {
+                // Get the average of all the colors that the rays hit
+                let color: Vec3 = colors_hit.iter().sum::<Vec3>() / colors_hit.len() as f32;
+                [color.x, color.y, color.z, 1.]
+                    .map(|c| (c * 255.) as u8)
+                    .into()
+            };
+
+            model.image.put_pixel(
+                (x + half_win_width) as u32,
+                (y + half_win_height) as u32,
+                pixel_color,
+            );
         }
     }
 }
