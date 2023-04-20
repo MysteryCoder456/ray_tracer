@@ -1,11 +1,5 @@
-use nannou::{image::Rgb, prelude::*};
-
-pub struct HitInfo {
-    pub hit_point: Vec3,
-    pub normal: Vec3,
-    pub color: Rgb<f32>,
-    pub distance: f32,
-}
+use crate::HitInfo;
+use nannou::prelude::*;
 
 pub trait Shape {
     fn translate(&mut self, v: Vec3);
@@ -15,7 +9,7 @@ pub trait Shape {
 pub struct Sphere {
     pub position: Vec3,
     pub radius: f32,
-    pub color: Rgb<f32>,
+    pub color: Vec3,
 }
 
 impl Shape for Sphere {
