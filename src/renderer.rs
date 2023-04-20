@@ -18,24 +18,23 @@ pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
 
     let mut color_multiplier = 1.;
     let mut bounce_count = 0;
-    let mut final_color = Vec3::ZERO;
+    let mut final_color = Vec3::ZERO; // Initial value of this is the sky color
 
     for _ in 0..MAX_RAY_BOUNCES {
-        bounce_count += 1;
         let closest_hit = trace_ray(ray_origin, ray_dir, &model);
 
         if let Some(hit) = closest_hit {
             let light_intensity = model.lighting_direction.dot(-hit.normal).max(0.);
             let shape_color = hit.color * light_intensity;
             final_color += shape_color * color_multiplier;
+            bounce_count += 1;
             color_multiplier *= 0.7;
 
             // ray gets reflected about the normal
             ray_origin = hit.hit_point + hit.normal * 0.01;
             ray_dir = ray_dir + 2. * hit.normal.dot(ray_dir) * hit.normal;
         } else {
-            // This is our sky color
-            return Vec3::ZERO;
+            break;
         }
     }
 
