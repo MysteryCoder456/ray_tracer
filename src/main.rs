@@ -46,13 +46,13 @@ fn model(_app: &App) -> Model {
         image: DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 70., // degrees
         lighting_direction: Vec3::new(0.4, 1., 0.4).normalize(),
-        sky_color: Vec3::new(0.46, 0.71, 0.99),
+        sky_color: Vec3::new(0.34, 0.62, 0.93),
         shapes: vec![
             Box::new(Sphere {
                 position: Vec3::new(0., 202., 15.),
                 radius: 200.,
                 material: Material {
-                    albedo: [0.18, 0.38, 0.93].into(),
+                    albedo: [0.22, 0.45, 0.96].into(),
                     roughness: 0.05,
                     metallic: 1.,
                 },
