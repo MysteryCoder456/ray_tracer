@@ -37,8 +37,8 @@ pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
 
             // shadows
             // TODO: make shadows less crispy
-            let shadow_ray_direction = -model.lighting_direction;
-            let shadow_hit = trace_ray(ray_origin, shadow_ray_direction, &model);
+            //let shadow_ray_direction = -model.lighting_direction;
+            let shadow_hit: Option<HitInfo> = None; // trace_ray(ray_origin, shadow_ray_direction, &model);
 
             if shadow_hit.is_some() {
                 final_color += Vec3::ZERO;

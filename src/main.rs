@@ -10,6 +10,7 @@ mod shapes;
 
 const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
+const RAYS_PER_PIXEL: usize = 6;
 
 pub struct HitInfo {
     hit_point: Vec3,
@@ -43,22 +44,22 @@ pub struct Model {
 
 fn model(_app: &App) -> Model {
     Model {
-        image: DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
+        image: DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 70., // degrees
         lighting_direction: Vec3::new(0.4, 1., 0.4).normalize(),
         sky_color: Vec3::new(0.34, 0.62, 0.93),
         shapes: vec![
             Box::new(Sphere {
-                position: Vec3::new(0., 202., 15.),
+                position: Vec3::new(0., 201., 10.),
                 radius: 200.,
                 material: Material {
-                    albedo: [0.22, 0.45, 0.96].into(),
-                    roughness: 0.05,
+                    albedo: [0.3, 0.5, 0.9].into(),
+                    roughness: 0.2,
                     metallic: 1.,
                 },
             }),
             Box::new(Sphere {
-                position: Vec3::new(0., 0., 10.),
+                position: Vec3::new(-5., -1., 10.),
                 radius: 2.,
                 material: Material {
                     albedo: [1., 0.25, 1.].into(),
@@ -76,14 +77,17 @@ fn update(_app: &App, model: &mut Model, update: Update) {
 
     model.shapes[1]
         .as_mut()
-        .translate(Vec3::Z * update.since_last.as_secs_f32() * 0.5);
+        .translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
 
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
 
     for y in -half_win_height..half_win_height {
         for x in -half_win_width..half_win_width {
-            let pixel_color = renderer::per_pixel(x as f32, y as f32, &model);
+            let mut pixel_color = Vec3::ZERO;
+            (0..RAYS_PER_PIXEL)
+                .for_each(|_| pixel_color += renderer::per_pixel(x as f32, y as f32, &model));
+            pixel_color /= RAYS_PER_PIXEL as f32;
 
             model.image.put_pixel(
                 (x + half_win_width) as u32,
