@@ -53,7 +53,7 @@ fn model(_app: &App) -> Model {
                 radius: 200.,
                 material: Material {
                     albedo: [0.18, 0.38, 0.93].into(),
-                    roughness: 0.2,
+                    roughness: 0.05,
                     metallic: 1.,
                 },
             }),
