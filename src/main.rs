@@ -45,7 +45,7 @@ fn model(_app: &App) -> Model {
     Model {
         image: DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
         fov: 70., // degrees
-        lighting_direction: Vec3::new(0.4, 0.4, 1.).normalize(),
+        lighting_direction: Vec3::new(0.4, 1., 0.4).normalize(),
         sky_color: Vec3::new(0.46, 0.71, 0.99),
         shapes: vec![
             Box::new(Sphere {
