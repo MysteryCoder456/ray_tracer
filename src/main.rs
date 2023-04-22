@@ -10,7 +10,7 @@ mod shapes;
 
 const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
-const RAYS_PER_PIXEL: usize = 6;
+const RAYS_PER_PIXEL: usize = 10;
 
 pub struct HitInfo {
     hit_point: Vec3,
@@ -60,7 +60,7 @@ fn model(_app: &App) -> Model {
                     radius: 200.,
                     material: Material {
                         albedo: [0.3, 0.5, 0.9].into(),
-                        roughness: 0.2,
+                        roughness: 0.15,
                         metallic: 1.,
                     },
                 },
@@ -69,7 +69,7 @@ fn model(_app: &App) -> Model {
                     radius: 2.,
                     material: Material {
                         albedo: [1., 0.25, 1.].into(),
-                        roughness: 0.08,
+                        roughness: 0.1,
                         metallic: 1.,
                     },
                 },
