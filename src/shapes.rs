@@ -24,11 +24,11 @@ impl Shape for Sphere {
     }
 
     fn ray_collision(&self, ray_pos: Vec3, ray_dir: Vec3) -> Option<HitInfo> {
+        let ray_pos = ray_pos - self.position;
+
         let a = ray_dir.dot(ray_dir);
-        let b = 2. * ray_pos.dot(ray_dir) - 2. * ray_dir.dot(self.position);
-        let c = ray_pos.dot(ray_pos) - 2. * ray_pos.dot(self.position)
-            + self.position.dot(self.position)
-            - self.radius * self.radius;
+        let b = 2. * ray_pos.dot(ray_dir);
+        let c = ray_pos.dot(ray_pos) - self.radius * self.radius;
         let d = b * b - 4. * a * c;
 
         if d < 0. {
@@ -41,7 +41,7 @@ impl Shape for Sphere {
             return None;
         }
 
-        let hit_point = ray_pos + ray_dir * t;
+        let hit_point = ray_pos + self.position + ray_dir * t;
 
         Some(HitInfo {
             hit_point,
