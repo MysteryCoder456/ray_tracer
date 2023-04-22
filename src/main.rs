@@ -3,7 +3,7 @@ use nannou::{
     prelude::*,
     wgpu::Texture,
 };
-use shapes::{Shape, Sphere};
+use shapes::Sphere;
 
 mod renderer;
 mod shapes;
@@ -85,7 +85,7 @@ fn model(_app: &App) -> Model {
     }
 }
 
-fn update(_app: &App, model: &mut Model, update: Update) {
+fn update(_app: &App, model: &mut Model, _update: Update) {
     // Create fresh image
     //model.image = DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
