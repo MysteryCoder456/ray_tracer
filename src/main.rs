@@ -87,19 +87,13 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
 
-    // FIXME: Ray tracer is not ray tracing
     for y in -half_win_height..half_win_height {
         for x in -half_win_width..half_win_width {
-            let mut pixel_color = Vec3::ZERO;
-            (0..RAYS_PER_PIXEL)
-                .map(|_| {
-                    let scene = model.scene.clone();
-                    std::thread::spawn(move || renderer::per_pixel(x as f32, y as f32, &scene))
-                })
-                .for_each(|h| {
-                    pixel_color += h.join().unwrap();
-                });
-            pixel_color /= RAYS_PER_PIXEL as f32;
+            let pixel_color = (0..RAYS_PER_PIXEL)
+                .map(|_| renderer::per_pixel(x as f32, y as f32, &model.scene))
+                .reduce(|a, b| a + b)
+                .unwrap()
+                / RAYS_PER_PIXEL as f32;
 
             model.image.put_pixel(
                 (x + half_win_width) as u32,
