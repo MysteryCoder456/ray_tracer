@@ -69,7 +69,7 @@ fn model(_app: &App) -> Model {
                     radius: 2.,
                     material: Material {
                         albedo: [1., 0.25, 1.].into(),
-                        roughness: 0.,
+                        roughness: 0.08,
                         metallic: 1.,
                     },
                 },
@@ -80,7 +80,7 @@ fn model(_app: &App) -> Model {
 
 fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
-    //model.image = DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
+    //model.image = DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
     model.scene.spheres[1].translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
 
