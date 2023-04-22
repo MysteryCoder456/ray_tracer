@@ -10,7 +10,7 @@ mod shapes;
 
 const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
-const RAYS_PER_PIXEL: usize = 10;
+const RAYS_PER_PIXEL: usize = 20;
 
 pub struct HitInfo {
     hit_point: Vec3,
@@ -44,12 +44,19 @@ fn main() {
 
 struct Model {
     image: DynamicImage,
+    thread_pool: rayon::ThreadPool,
     scene: Scene,
 }
 
 fn model(_app: &App) -> Model {
+    let thread_pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(num_cpus::get())
+        .build()
+        .unwrap();
+
     Model {
         image: DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
+        thread_pool,
         scene: Scene {
             fov: 70., // degrees
             lighting_direction: Vec3::new(0.4, 1., 0.4).normalize(),
@@ -87,25 +94,39 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
 
-    for y in -half_win_height..half_win_height {
-        for x in -half_win_width..half_win_width {
-            let pixel_color = (0..RAYS_PER_PIXEL)
-                .map(|_| renderer::per_pixel(x as f32, y as f32, &model.scene))
-                .reduce(|a, b| a + b)
-                .unwrap()
-                / RAYS_PER_PIXEL as f32;
+    let (tx, rx) = crossbeam::channel::unbounded::<(i32, i32, Vec3)>();
 
-            model.image.put_pixel(
-                (x + half_win_width) as u32,
-                (y + half_win_height) as u32,
-                [
-                    (pixel_color.x * 255.) as u8,
-                    (pixel_color.y * 255.) as u8,
-                    (pixel_color.z * 255.) as u8,
-                    255,
-                ]
-                .into(),
-            );
+    for y in -half_win_height..half_win_height {
+        let tx_clone = tx.clone();
+        let scene = model.scene.clone();
+
+        model.thread_pool.spawn(move || {
+            for x in -half_win_width..half_win_width {
+                let pixel_color = (0..RAYS_PER_PIXEL)
+                    .map(|_| renderer::per_pixel(x as f32, y as f32, &scene))
+                    .reduce(|a, b| a + b)
+                    .unwrap()
+                    / RAYS_PER_PIXEL as f32;
+                tx_clone.send((x, y, pixel_color)).unwrap();
+            }
+        });
+    }
+
+    for (i, (x, y, pixel_color)) in rx.iter().enumerate() {
+        model.image.put_pixel(
+            (x + half_win_width) as u32,
+            (y + half_win_height) as u32,
+            [
+                (pixel_color.x * 255.) as u8,
+                (pixel_color.y * 255.) as u8,
+                (pixel_color.z * 255.) as u8,
+                255,
+            ]
+            .into(),
+        );
+
+        if i + 1 == (WIN_WIDTH * WIN_HEIGHT) as usize {
+            break;
         }
     }
 }
