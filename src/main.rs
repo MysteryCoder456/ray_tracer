@@ -26,6 +26,14 @@ pub struct Material {
     metallic: f32,
 }
 
+#[derive(Clone)]
+pub struct Scene {
+    fov: f32,
+    lighting_direction: Vec3,
+    sky_color: Vec3,
+    spheres: Vec<Sphere>,
+}
+
 fn main() {
     nannou::app(model)
         .update(update)
@@ -34,40 +42,39 @@ fn main() {
         .run();
 }
 
-pub struct Model {
+struct Model {
     image: DynamicImage,
-    fov: f32,
-    lighting_direction: Vec3,
-    sky_color: Vec3,
-    shapes: Vec<Box<dyn Shape>>,
+    scene: Scene,
 }
 
 fn model(_app: &App) -> Model {
     Model {
         image: DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32),
-        fov: 70., // degrees
-        lighting_direction: Vec3::new(0.4, 1., 0.4).normalize(),
-        sky_color: Vec3::new(0.34, 0.62, 0.93),
-        shapes: vec![
-            Box::new(Sphere {
-                position: Vec3::new(0., 201., 10.),
-                radius: 200.,
-                material: Material {
-                    albedo: [0.3, 0.5, 0.9].into(),
-                    roughness: 0.2,
-                    metallic: 1.,
+        scene: Scene {
+            fov: 70., // degrees
+            lighting_direction: Vec3::new(0.4, 1., 0.4).normalize(),
+            sky_color: Vec3::new(0.34, 0.62, 0.93),
+            spheres: vec![
+                Sphere {
+                    position: Vec3::new(0., 201., 10.),
+                    radius: 200.,
+                    material: Material {
+                        albedo: [0.3, 0.5, 0.9].into(),
+                        roughness: 0.2,
+                        metallic: 1.,
+                    },
                 },
-            }),
-            Box::new(Sphere {
-                position: Vec3::new(-5., -1., 10.),
-                radius: 2.,
-                material: Material {
-                    albedo: [1., 0.25, 1.].into(),
-                    roughness: 0.,
-                    metallic: 1.,
+                Sphere {
+                    position: Vec3::new(-5., -1., 10.),
+                    radius: 2.,
+                    material: Material {
+                        albedo: [1., 0.25, 1.].into(),
+                        roughness: 0.,
+                        metallic: 1.,
+                    },
                 },
-            }),
-        ],
+            ],
+        },
     }
 }
 
@@ -75,18 +82,23 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
     //model.image = DynamicImage::new_rgba8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
-    model.shapes[1]
-        .as_mut()
-        .translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
+    model.scene.spheres[1].translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
 
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
 
+    // FIXME: Ray tracer is not ray tracing
     for y in -half_win_height..half_win_height {
         for x in -half_win_width..half_win_width {
             let mut pixel_color = Vec3::ZERO;
             (0..RAYS_PER_PIXEL)
-                .for_each(|_| pixel_color += renderer::per_pixel(x as f32, y as f32, &model));
+                .map(|_| {
+                    let scene = model.scene.clone();
+                    std::thread::spawn(move || renderer::per_pixel(x as f32, y as f32, &scene))
+                })
+                .for_each(|h| {
+                    pixel_color += h.join().unwrap();
+                });
             pixel_color /= RAYS_PER_PIXEL as f32;
 
             model.image.put_pixel(
@@ -105,7 +117,6 @@ fn update(_app: &App, model: &mut Model, update: Update) {
 }
 
 fn view(app: &App, model: &Model, frame: Frame) {
-    frame.clear(BLACK);
     let texture = Texture::from_image(app, &model.image);
     let draw = app.draw();
     draw.texture(&texture).finish();

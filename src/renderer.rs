@@ -1,19 +1,19 @@
-use crate::{HitInfo, Model, WIN_HEIGHT, WIN_WIDTH};
+use crate::{shapes::Shape, HitInfo, Scene, WIN_HEIGHT, WIN_WIDTH};
 use nannou::prelude::*;
 use rand::Rng;
 
 const ASPECT_RATIO: f32 = WIN_WIDTH as f32 / WIN_HEIGHT as f32;
 const MAX_RAY_BOUNCES: usize = 3;
 
-pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
+pub fn per_pixel(x: f32, y: f32, scene: &Scene) -> Vec3 {
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
     let mut rng = rand::thread_rng();
 
     let mut ray_origin = Vec3::ZERO;
     let mut ray_dir = Vec3::new(
-        ASPECT_RATIO * (model.fov / 2.).tan() * x as f32 / half_win_width as f32,
-        (model.fov / 2.).tan() * y as f32 / half_win_height as f32,
+        ASPECT_RATIO * (scene.fov / 2.).tan() * x / half_win_width as f32,
+        (scene.fov / 2.).tan() * y / half_win_height as f32,
         1.,
     )
     .normalize();
@@ -22,7 +22,7 @@ pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
     let mut final_color = Vec3::ZERO;
 
     for _ in 0..MAX_RAY_BOUNCES {
-        let closest_hit = trace_ray(ray_origin, ray_dir, &model);
+        let closest_hit = trace_ray(ray_origin, ray_dir, scene);
 
         if let Some(hit) = closest_hit {
             let roughness_deviation = Vec3::new(
@@ -43,14 +43,14 @@ pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
             if shadow_hit.is_some() {
                 final_color += Vec3::ZERO;
             } else {
-                let light_intensity = model.lighting_direction.dot(-hit.normal).max(0.);
+                let light_intensity = scene.lighting_direction.dot(-hit.normal).max(0.);
                 let shape_color = hit.material.albedo * light_intensity;
                 final_color += shape_color * color_multiplier;
             }
 
             color_multiplier *= 0.5;
         } else {
-            final_color += model.sky_color * color_multiplier;
+            final_color += scene.sky_color * color_multiplier;
             break;
         }
     }
@@ -58,10 +58,10 @@ pub fn per_pixel(x: f32, y: f32, model: &Model) -> Vec3 {
     final_color
 }
 
-fn trace_ray(ray_origin: Vec3, ray_direction: Vec3, model: &Model) -> Option<HitInfo> {
+fn trace_ray(ray_origin: Vec3, ray_direction: Vec3, scene: &Scene) -> Option<HitInfo> {
     let mut closest_hit: Option<HitInfo> = None;
 
-    for s in &model.shapes {
+    for s in &scene.spheres {
         let hit_info = s.ray_collision(ray_origin, ray_direction);
 
         if let Some(hit) = hit_info {

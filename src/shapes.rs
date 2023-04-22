@@ -1,12 +1,13 @@
 use crate::{HitInfo, Material};
 use nannou::prelude::*;
 
-pub trait Shape {
+pub trait Shape: Clone {
     fn material(&self) -> Material;
     fn translate(&mut self, v: Vec3);
     fn ray_collision(&self, ray_pos: Vec3, ray_dir: Vec3) -> Option<HitInfo>;
 }
 
+#[derive(Clone)]
 pub struct Sphere {
     pub position: Vec3,
     pub radius: f32,
