@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use nannou::{
     image::{DynamicImage, GenericImage},
     prelude::*,
@@ -95,11 +97,12 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
 
+    let arc_scene = Arc::new(model.scene.clone());
     let (tx, rx) = crossbeam::channel::unbounded::<(i32, i32, Vec3)>();
 
     for y in -half_win_height..half_win_height {
+        let scene = arc_scene.clone();
         let tx_clone = tx.clone();
-        let scene = model.scene.clone();
 
         model.thread_pool.spawn(move || {
             for x in -half_win_width..half_win_width {
