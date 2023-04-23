@@ -3,7 +3,7 @@ use nannou::{
     prelude::*,
     wgpu::Texture,
 };
-use shapes::Sphere;
+use shapes::{Shape, Sphere};
 
 mod renderer;
 mod shapes;
@@ -59,7 +59,7 @@ fn model(_app: &App) -> Model {
         thread_pool,
         scene: Scene {
             fov: 70.0.to_radians(), // degrees
-            lighting_direction: Vec3::new(0.4, 1., 0.4).normalize(),
+            lighting_direction: Vec3::new(0.4, 1., 0.7).normalize(),
             sky_color: Vec3::new(0.34, 0.62, 0.93),
             spheres: vec![
                 Sphere {
@@ -72,7 +72,7 @@ fn model(_app: &App) -> Model {
                     },
                 },
                 Sphere {
-                    position: Vec3::new(0., -1.25, 10.),
+                    position: Vec3::new(-12., -1.25, 10.),
                     radius: 2.,
                     material: Material {
                         albedo: [1., 0.25, 1.].into(),
@@ -85,11 +85,11 @@ fn model(_app: &App) -> Model {
     }
 }
 
-fn update(_app: &App, model: &mut Model, _update: Update) {
+fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
     //model.image = DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
-    //model.scene.spheres[1].translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
+    model.scene.spheres[1].translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
     //model.scene.fov = (model.scene.fov - 0.1 * update.since_last.as_secs_f32()).max(0.01);
 
     let half_win_width = WIN_WIDTH / 2;
