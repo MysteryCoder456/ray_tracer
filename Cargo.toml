@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 crossbeam = "0.8.2"
+fastrand = "1.9"
 nannou = "0.18"
 num_cpus = "1.15"
-rand = "0.8"
 rayon = "1.7"
