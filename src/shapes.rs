@@ -93,12 +93,18 @@ impl Shape for Triangle {
             return None;
         }
 
-        // FIXME: HELP
-        let normal = -Vec3::Y; //edge1.cross(edge2).normalize_or_zero();
+        let normal1 = edge1.cross(edge2).normalize();
+        let normal2 = -normal1;
+
+        let n = if normal1.dot(ray_dir) < normal2.dot(ray_dir) {
+            normal1
+        } else {
+            normal2
+        };
 
         Some(HitInfo {
             hit_point: ray_pos + ray_dir * t,
-            normal,
+            normal: n,
             material: self.material,
             distance: t,
         })

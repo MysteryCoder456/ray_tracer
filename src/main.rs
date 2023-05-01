@@ -68,10 +68,10 @@ fn model(_app: &App) -> Model {
         thread_pool,
         scene: Scene {
             fov: 70.0.to_radians(), // degrees
-            lighting_direction: Vec3::new(0.4, 1., 0.7).normalize(),
-            sky_color: Vec3::new(0.34, 0.62, 0.93),
+            lighting_direction: Vec3::new(0.7, 0.5, 0.5).normalize(),
+            sky_color: Vec3::new(0., 0., 0.),
             spheres: vec![Sphere {
-                position: Vec3::new(-12., -0.5, 10.),
+                position: Vec3::new(-8., -0.25, 12.),
                 radius: 2.,
                 material: Material {
                     albedo: [1., 0.25, 1.].into(),
