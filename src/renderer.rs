@@ -75,5 +75,20 @@ fn trace_ray(ray_origin: Vec3, ray_direction: Vec3, scene: &Scene) -> Option<Hit
         }
     }
 
+    for t in &scene.triangles {
+        let hit_info = t.ray_collision(ray_origin, ray_direction);
+
+        if let Some(hit) = hit_info {
+            if let Some(ref ch) = closest_hit {
+                if hit.distance < ch.distance {
+                    println!("{:?}", hit.normal);
+                    closest_hit = Some(hit);
+                }
+            } else {
+                closest_hit = Some(hit);
+            }
+        }
+    }
+
     closest_hit
 }
