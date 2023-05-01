@@ -25,7 +25,8 @@ pub struct HitInfo {
 pub struct Material {
     albedo: Vec3,
     roughness: f32,
-    metallic: f32,
+    specularity: f32,
+    emission: f32,
 }
 
 #[derive(Clone)]
@@ -57,10 +58,18 @@ fn model(_app: &App) -> Model {
         .build()
         .unwrap();
 
+    let mirror_material = Material {
+        albedo: Vec3::ZERO,
+        roughness: 0.,
+        specularity: 1.,
+        emission: 1.,
+    };
+
     let floor_material = Material {
-        albedo: Vec3::new(0.3, 0.5, 0.9),
+        albedo: Vec3::new(0.17, 0.48, 0.95),
         roughness: 0.15,
-        metallic: 1.,
+        specularity: 0.,
+        emission: 0.9,
     };
 
     Model {
@@ -75,8 +84,9 @@ fn model(_app: &App) -> Model {
                 radius: 2.,
                 material: Material {
                     albedo: [1., 0.25, 1.].into(),
-                    roughness: 0.1,
-                    metallic: 1.,
+                    roughness: 0.15,
+                    specularity: 0.1,
+                    emission: 0.65,
                 },
             }],
             triangles: vec![
@@ -91,6 +101,18 @@ fn model(_app: &App) -> Model {
                     v1: Vec3::new(20., 2., 20.),
                     v2: Vec3::new(20., 2., -20.),
                     material: floor_material,
+                },
+                Triangle {
+                    v0: Vec3::new(-7., -7., 20.),
+                    v1: Vec3::new(-7., 2., 20.),
+                    v2: Vec3::new(7., 2., 20.),
+                    material: mirror_material,
+                },
+                Triangle {
+                    v0: Vec3::new(-7., -7., 20.),
+                    v1: Vec3::new(7., -7., 20.),
+                    v2: Vec3::new(7., 2., 20.),
+                    material: mirror_material,
                 },
             ],
         },

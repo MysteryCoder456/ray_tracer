@@ -2,7 +2,7 @@ use crate::{shapes::Shape, HitInfo, Scene, WIN_HEIGHT, WIN_WIDTH};
 use nannou::prelude::*;
 
 const ASPECT_RATIO: f32 = WIN_WIDTH as f32 / WIN_HEIGHT as f32;
-const MAX_RAY_BOUNCES: usize = 3;
+const MAX_RAY_BOUNCES: usize = 4;
 
 pub fn per_pixel(x: f32, y: f32, scene: &Scene) -> Vec3 {
     let half_win_width = WIN_WIDTH / 2;
@@ -24,27 +24,26 @@ pub fn per_pixel(x: f32, y: f32, scene: &Scene) -> Vec3 {
         let closest_hit = trace_ray(ray_origin, ray_dir, scene);
 
         if let Some(hit) = closest_hit {
-            let roughness_deviation =
-                Vec3::new(rng.f32(), rng.f32(), rng.f32()) * 0.5 * hit.material.roughness;
+            let roughness_deviation = Vec3::new(
+                rng.f32() * 2. - 1.,
+                rng.f32() * 2. - 1.,
+                rng.f32() * 2. - 1.,
+            ) * 0.5
+                * hit.material.roughness;
 
             // ray gets reflected about the normal
             ray_origin = hit.hit_point + hit.normal * 0.01;
             ray_dir = ray_dir - 2. * hit.normal.dot(ray_dir) * hit.normal + roughness_deviation;
 
-            // shadows
-            // TODO: make shadows less crispy
-            //let shadow_ray_direction = -model.lighting_direction;
-            let shadow_hit: Option<HitInfo> = None; // trace_ray(ray_origin, shadow_ray_direction, &model);
+            let light_intensity = scene.lighting_direction.dot(-hit.normal).max(0.);
+            let shape_color = hit
+                .material
+                .albedo
+                .lerp(final_color, hit.material.specularity)
+                * light_intensity;
+            final_color += shape_color * color_multiplier;
 
-            if shadow_hit.is_some() {
-                final_color += Vec3::ZERO;
-            } else {
-                let light_intensity = scene.lighting_direction.dot(-hit.normal).max(0.);
-                let shape_color = hit.material.albedo * light_intensity;
-                final_color += shape_color * color_multiplier;
-            }
-
-            color_multiplier *= 0.5;
+            color_multiplier *= hit.material.emission;
         } else {
             final_color += scene.sky_color * color_multiplier;
             break;
