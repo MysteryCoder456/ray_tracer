@@ -12,7 +12,7 @@ mod shapes;
 
 const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
-const RAYS_PER_PIXEL: usize = 20;
+const RAYS_PER_PIXEL: usize = 40;
 
 pub struct HitInfo {
     hit_point: Vec3,
@@ -67,9 +67,9 @@ fn model(_app: &App) -> Model {
 
     let floor_material = Material {
         albedo: Vec3::new(0.17, 0.48, 0.95),
-        roughness: 0.15,
+        roughness: 0.25,
         specularity: 0.,
-        emission: 0.9,
+        emission: 0.5,
     };
 
     Model {
@@ -77,10 +77,10 @@ fn model(_app: &App) -> Model {
         thread_pool,
         scene: Scene {
             fov: 70.0.to_radians(), // degrees
-            lighting_direction: Vec3::new(0.7, 0.5, 0.5).normalize(),
+            lighting_direction: Vec3::new(0.7, 0.5, 0.).normalize(),
             sky_color: Vec3::new(0., 0., 0.),
             spheres: vec![Sphere {
-                position: Vec3::new(-8., -0.25, 12.),
+                position: Vec3::new(8., -0.25, 8.),
                 radius: 2.,
                 material: Material {
                     albedo: [1., 0.25, 1.].into(),
@@ -103,15 +103,15 @@ fn model(_app: &App) -> Model {
                     material: floor_material,
                 },
                 Triangle {
-                    v0: Vec3::new(-7., -7., 20.),
-                    v1: Vec3::new(-7., 2., 20.),
-                    v2: Vec3::new(7., 2., 20.),
+                    v0: Vec3::new(-7., -7., 12.),
+                    v1: Vec3::new(-7., 2., 12.),
+                    v2: Vec3::new(7., 2., 12.),
                     material: mirror_material,
                 },
                 Triangle {
-                    v0: Vec3::new(-7., -7., 20.),
-                    v1: Vec3::new(7., -7., 20.),
-                    v2: Vec3::new(7., 2., 20.),
+                    v0: Vec3::new(-7., -7., 12.),
+                    v1: Vec3::new(7., -7., 12.),
+                    v2: Vec3::new(7., 2., 12.),
                     material: mirror_material,
                 },
             ],
@@ -123,8 +123,7 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
     //model.image = DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
-    model.scene.spheres[0].translate(Vec3::X * update.since_last.as_secs_f32() * 0.5);
-    //model.scene.fov = (model.scene.fov - 0.1 * update.since_last.as_secs_f32()).max(0.01);
+    model.scene.spheres[0].translate(-Vec3::X * update.since_last.as_secs_f32() * 0.5);
 
     let half_win_width = WIN_WIDTH / 2;
     let half_win_height = WIN_HEIGHT / 2;
