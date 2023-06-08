@@ -1,18 +1,18 @@
-use crate::{shapes::Shape, HitInfo, Scene, WIN_HEIGHT, WIN_WIDTH};
+use crate::{
+    shapes::Shape, HitInfo, Scene, HALF_WIN_HEIGHT, HALF_WIN_WIDTH, WIN_HEIGHT, WIN_WIDTH,
+};
 use nannou::prelude::*;
 
 const ASPECT_RATIO: f32 = WIN_WIDTH as f32 / WIN_HEIGHT as f32;
-const MAX_RAY_BOUNCES: usize = 4;
+const MAX_RAY_BOUNCES: usize = 3;
 
 pub fn per_pixel(x: f32, y: f32, scene: &Scene) -> Vec3 {
-    let half_win_width = WIN_WIDTH / 2;
-    let half_win_height = WIN_HEIGHT / 2;
     let rng = fastrand::Rng::new();
 
-    let mut ray_origin = Vec3::ZERO;
+    let mut ray_origin = scene.camera_pos;
     let mut ray_dir = Vec3::new(
-        ASPECT_RATIO * (scene.fov / 2.).tan() * x / half_win_width as f32,
-        (scene.fov / 2.).tan() * y / half_win_height as f32,
+        ASPECT_RATIO * (scene.fov / 2.).tan() * x / HALF_WIN_WIDTH as f32,
+        (scene.fov / 2.).tan() * y / HALF_WIN_HEIGHT as f32,
         1.,
     )
     .normalize();
