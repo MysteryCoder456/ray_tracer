@@ -27,7 +27,7 @@ pub struct HitInfo {
 pub struct Material {
     albedo: Vec3,
     roughness: f32,
-    specularity: f32,
+    emission_color: Vec3,
     emission: f32,
 }
 
@@ -64,18 +64,11 @@ fn model(_app: &App) -> Model {
         .build()
         .unwrap();
 
-    let mirror_material = Material {
-        albedo: Vec3::ZERO,
-        roughness: 0.,
-        specularity: 1.,
-        emission: 1.,
-    };
-
     let floor_material = Material {
         albedo: Vec3::new(0.17, 0.48, 0.95),
-        roughness: 0.25,
-        specularity: 0.,
-        emission: 0.5,
+        roughness: 0.15,
+        emission_color: Vec3::new(0.17, 0.48, 0.95),
+        emission: 0.,
     };
 
     Model {
@@ -83,21 +76,33 @@ fn model(_app: &App) -> Model {
         thread_pool,
         scene: Scene {
             fov: 70.0.to_radians(), // degrees
-            lighting_direction: Vec3::new(0.7, 0.5, 0.).normalize(),
+            lighting_direction: Vec3::new(0., 0.7, 0.5).normalize(),
             sky_color: Vec3::new(0., 0., 0.),
             camera_pos: Vec3::ZERO,
             camera_dir: Vec3::Z,
             camera_speed: 0.,
-            spheres: vec![Sphere {
-                position: Vec3::new(8., -0.25, 8.),
-                radius: 2.,
-                material: Material {
-                    albedo: [1., 0.25, 1.].into(),
-                    roughness: 0.15,
-                    specularity: 0.1,
-                    emission: 0.65,
+            spheres: vec![
+                Sphere {
+                    position: Vec3::new(4., 0., 8.),
+                    radius: 2.,
+                    material: Material {
+                        albedo: Vec3::new(1., 0.25, 1.),
+                        roughness: 0.15,
+                        emission_color: Vec3::new(1., 0.25, 1.),
+                        emission: 0.65,
+                    },
                 },
-            }],
+                Sphere {
+                    position: Vec3::new(-4., 0., 8.),
+                    radius: 2.,
+                    material: Material {
+                        albedo: Vec3::new(0.25, 1., 1.),
+                        roughness: 0.15,
+                        emission_color: Vec3::new(0.25, 1., 1.),
+                        emission: 0.65,
+                    },
+                },
+            ],
             triangles: vec![
                 Triangle {
                     v0: Vec3::new(-20., 2., 20.),
@@ -110,18 +115,6 @@ fn model(_app: &App) -> Model {
                     v1: Vec3::new(20., 2., 20.),
                     v2: Vec3::new(20., 2., -20.),
                     material: floor_material,
-                },
-                Triangle {
-                    v0: Vec3::new(-7., -7., 12.),
-                    v1: Vec3::new(-7., 2., 12.),
-                    v2: Vec3::new(7., 2., 12.),
-                    material: mirror_material,
-                },
-                Triangle {
-                    v0: Vec3::new(-7., -7., 12.),
-                    v1: Vec3::new(7., -7., 12.),
-                    v2: Vec3::new(7., 2., 12.),
-                    material: mirror_material,
                 },
             ],
         },
@@ -150,7 +143,7 @@ fn update(_app: &App, model: &mut Model, update: Update) {
     // Create fresh image
     //model.image = DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
-    model.scene.spheres[0].translate(-Vec3::X * update.since_last.as_secs_f32() * 0.5);
+    //model.scene.spheres[0].translate(-Vec3::X * update.since_last.as_secs_f32() * 0.5);
 
     // Camera movement
     model.scene.camera_pos += model.scene.camera_dir * model.scene.camera_speed;

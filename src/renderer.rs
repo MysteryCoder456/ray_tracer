@@ -20,7 +20,7 @@ pub fn per_pixel(x: f32, y: f32, scene: &Scene) -> Vec3 {
     let mut color_multiplier = 1.;
     let mut final_color = Vec3::ZERO;
 
-    for bounce in 0..MAX_RAY_BOUNCES {
+    for _ in 0..MAX_RAY_BOUNCES {
         let closest_hit = trace_ray(ray_origin, ray_dir, scene);
 
         if let Some(hit) = closest_hit {
@@ -38,11 +38,8 @@ pub fn per_pixel(x: f32, y: f32, scene: &Scene) -> Vec3 {
             let light_intensity = scene.lighting_direction.dot(-hit.normal).max(0.);
             let shape_color = hit.material.albedo * light_intensity;
 
-            // multiplying by `bounce.min(1)` to prevent specularity on first bounce
-            final_color += shape_color
-                .lerp(final_color, hit.material.specularity * bounce.min(1) as f32)
-                * color_multiplier;
-            color_multiplier *= hit.material.emission;
+            final_color += shape_color * color_multiplier;
+            color_multiplier *= 0.5;
         } else {
             final_color += scene.sky_color * color_multiplier;
             break;
