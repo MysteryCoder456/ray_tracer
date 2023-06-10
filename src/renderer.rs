@@ -17,31 +17,30 @@ pub fn per_pixel(x: f32, y: f32, scene: &Scene) -> Vec3 {
     )
     .normalize();
 
-    let mut color_multiplier = 1.;
+    let mut color_contribution = Vec3::ONE;
     let mut final_color = Vec3::ZERO;
 
     for _ in 0..MAX_RAY_BOUNCES {
         let closest_hit = trace_ray(ray_origin, ray_dir, scene);
 
         if let Some(hit) = closest_hit {
-            let roughness_deviation = Vec3::new(
-                rng.f32() * 2. - 1.,
-                rng.f32() * 2. - 1.,
-                rng.f32() * 2. - 1.,
-            ) * 0.5
-                * hit.material.roughness;
-
-            // ray gets reflected about the normal
+            // ray gets diffused in random direction
+            // TODO: double normalize = yikes
             ray_origin = hit.hit_point + hit.normal * 0.01;
-            ray_dir = ray_dir - 2. * hit.normal.dot(ray_dir) * hit.normal + roughness_deviation;
+            ray_dir = (Vec3::new(
+                rng.f32() * 2. - 1.,
+                rng.f32() * 2. - 1.,
+                rng.f32() * 2. - 1.,
+            )
+            .normalize()
+                + hit.normal)
+                .normalize();
 
-            let light_intensity = scene.lighting_direction.dot(-hit.normal).max(0.);
-            let shape_color = hit.material.albedo * light_intensity;
-
-            final_color += shape_color * color_multiplier;
-            color_multiplier *= 0.5;
+            color_contribution *= hit.material.albedo;
+            final_color +=
+                hit.material.emission_color.unwrap_or(hit.material.albedo) * hit.material.emission;
         } else {
-            final_color += scene.sky_color * color_multiplier;
+            final_color += scene.sky_color * color_contribution;
             break;
         }
     }

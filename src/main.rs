@@ -5,7 +5,7 @@ use nannou::{
     prelude::*,
     wgpu::Texture,
 };
-use shapes::{Shape, Sphere, Triangle};
+use shapes::{Sphere, Triangle};
 
 mod renderer;
 mod shapes;
@@ -14,7 +14,7 @@ const WIN_WIDTH: i32 = 1280;
 const WIN_HEIGHT: i32 = 720;
 const HALF_WIN_WIDTH: i32 = WIN_WIDTH / 2;
 const HALF_WIN_HEIGHT: i32 = WIN_HEIGHT / 2;
-const RAYS_PER_PIXEL: usize = 20;
+const RAYS_PER_PIXEL: usize = 40;
 
 pub struct HitInfo {
     hit_point: Vec3,
@@ -23,18 +23,20 @@ pub struct HitInfo {
     distance: f32,
 }
 
+/// Describes the material of an object.
+/// If `emission_color` is `None`, it is assumed to be same as the `albedo`.
 #[derive(Copy, Clone, Debug)]
 pub struct Material {
     albedo: Vec3,
     roughness: f32,
-    emission_color: Vec3,
+    emission_color: Option<Vec3>,
     emission: f32,
 }
 
+/// Describes a ray-tracing scene and it's environment.
 #[derive(Clone)]
 pub struct Scene {
     fov: f32,
-    lighting_direction: Vec3,
     sky_color: Vec3,
     camera_pos: Vec3,
     camera_dir: Vec3,
@@ -65,10 +67,10 @@ fn model(_app: &App) -> Model {
         .unwrap();
 
     let floor_material = Material {
-        albedo: Vec3::new(0.17, 0.48, 0.95),
+        albedo: Vec3::new(0., 0.6, 0.09),
         roughness: 0.15,
-        emission_color: Vec3::new(0.17, 0.48, 0.95),
-        emission: 0.,
+        emission_color: None,
+        emission: 0.4,
     };
 
     Model {
@@ -76,30 +78,29 @@ fn model(_app: &App) -> Model {
         thread_pool,
         scene: Scene {
             fov: 70.0.to_radians(), // degrees
-            lighting_direction: Vec3::new(0., 0.7, 0.5).normalize(),
-            sky_color: Vec3::new(0., 0., 0.),
+            sky_color: Vec3::ZERO,  //Vec3::new(0.6, 0.87, 1.),
             camera_pos: Vec3::ZERO,
             camera_dir: Vec3::Z,
             camera_speed: 0.,
             spheres: vec![
                 Sphere {
-                    position: Vec3::new(4., 0., 8.),
+                    position: Vec3::new(3., 0., 8.),
                     radius: 2.,
                     material: Material {
-                        albedo: Vec3::new(1., 0.25, 1.),
+                        albedo: Vec3::new(1., 0.35, 1.),
                         roughness: 0.15,
-                        emission_color: Vec3::new(1., 0.25, 1.),
-                        emission: 0.65,
+                        emission_color: None,
+                        emission: 0.6,
                     },
                 },
                 Sphere {
-                    position: Vec3::new(-4., 0., 8.),
+                    position: Vec3::new(-3., 0., 8.),
                     radius: 2.,
                     material: Material {
-                        albedo: Vec3::new(0.25, 1., 1.),
+                        albedo: Vec3::ONE, //Vec3::new(0.07, 0.06, 0.73),
                         roughness: 0.15,
-                        emission_color: Vec3::new(0.25, 1., 1.),
-                        emission: 0.65,
+                        emission_color: None,
+                        emission: 1.,
                     },
                 },
             ],
@@ -139,7 +140,7 @@ fn event(app: &App, model: &mut Model, ev: Event) {
     }
 }
 
-fn update(_app: &App, model: &mut Model, update: Update) {
+fn update(_app: &App, model: &mut Model, _update: Update) {
     // Create fresh image
     //model.image = DynamicImage::new_rgb8(WIN_WIDTH as u32, WIN_HEIGHT as u32);
 
